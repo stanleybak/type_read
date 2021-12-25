@@ -4,8 +4,6 @@
 var Canvas = (function() {
 
 var self = {}; // exported functions
-
-console.log("in canvas");
     
 // words slightly filtered from from https://en.wikipedia.org/wiki/Dolch_word_list
 var words = ["and", "away", "big", "blue", "can", "come", "down", "find", "for", "funny", "go", "help", "here", "in",
@@ -33,24 +31,108 @@ var words = ["and", "away", "big", "blue", "can", "come", "down", "find", "for",
          "seed", "sheep", "shoe", "sister", "snow", "song", "squirrel", "stick", "street", "sun", "table", "thing",
          "time", "top", "toy", "tree", "watch", "water", "way", "wind", "window", "wood"];
 
-var canvas;
-var current_word; // assigned on init
-var typed = "";
-var repaintRequested = false;
+// constants
 var LIGHT_BLUE = 'rgb(0,153,255)';
-    
-function keypress(e)
-{
-    console.log('key down ' + e);
+var MAX_TYPED_LEN = 10;
+var TROPHY_PATH = 'trophy.png';
+var TYPE_DELAY_MS = 500; // 500 ms typing delay
 
-    var audio = new Audio(current_word + '.mp3');
-    audio.play();
+// variables
+var repaintRequested = false;
+var trophyImage = new Image();
+var trophies = []; // list of x coords
+
+var v = document.getElementById('vid1');
+
+// assigned on init
+var canvas;
+var currentWord;
+var currentWordFont;
+var typedWord;
+var lastTypeMs;
+var incorrectCount = 0;
+    
+function keyPress(e)
+{
+    if (!e.repeat)
+    {
+        lastTypeMs = ms();
+        
+        var keynum = -1;
+
+        if (window.event) // IE
+            keynum = e.keyCode;
+        else if (e.which) // Netscape/Firefox/Opera
+            keynum = e.which;
+
+        var charStr = String.fromCharCode(keynum).toLowerCase();
+
+        if (charStr.match(/^[0-9a-z]+$/))
+        {
+            if (typedWord.length + 1 > MAX_TYPED_LEN)
+                typedWord = typedWord.substring(0, MAX_TYPED_LEN - 1);
+
+            if (typedWord.length == 0)
+                new Audio(currentWord + '.mp3').play();
+            
+            typedWord += charStr;
+        }
+        else if (keynum == 8) // backspace
+        {
+            // backspace
+            if (typedWord.length > 0)
+                typedWord = typedWord.substring(0, typedWord.length - 1);
+        }
+        else if (keynum == 13)
+            checkAnswer();
+
+        repaint();
+    }
+}
+
+function ms()
+{
+    return new Date().getTime();
+}
+
+function checkAnswer()
+{
+    if (typedWord == currentWord)
+    {
+        new Audio(currentWord + '.mp3').play();
+        
+        var x = 100 + ms() % (canvas.width - 200);
+        trophies.push(x);
+        nextWord();
+    }
+    else
+    {
+        new Audio('wrong.mp3').play();
+        
+        if (incorrectCount >= 1)
+        {
+            console.log("incorrect; next word");
+            nextWord();
+        }
+        else
+            incorrectCount += 1;
+    }
 }
 
 function nextWord()
 {
-    var index = new Date().getTime() % words.length; // time returned is milliseconds 
-    current_word = words[index];
+    var index = ms() % words.length; // time returned is milliseconds 
+    currentWord = words[index];
+
+    var size = 40 + ms() % 30;
+    var fonts = ["serif", "sans-serif", "courier"];
+    var font = fonts[ms() % fonts.length];
+
+    currentWordFont = size + "px " + font;
+
+    typedWord = "";
+    incorrectCount = 0;
+    repaint();
 }
 
 function windowResize(event)
@@ -132,17 +214,55 @@ function repaint()
 function draw()
 {
     repaintRequested = false;
-    
     var ctx = canvas.getContext('2d');
     ctx.save();
-    
-    ctx.font = '48px serif';
-    ctx.fillText(current_word, 50, 50);
 
-    drawBoundary(ctx);
+    if (!v.paused && !v.ended)
+    {
+        console.log('frame');
+        ctx.drawImage(v, 0, 0,canvas.width, canvas.height);
+        //setTimeout(draw,20,v,c,w,h);
+        repaint();
+    }
+    else
+    {
+        drawBackground(ctx);
+
+        // trophies
+        var y = 10; //canvas.height / 10;
+        var img = document.getElementById("trophy");
+
+        for (var i = 0; i < trophies.length; ++i)
+        {
+            var x = trophies[i];
+
+            // draw trophy at x, y
+            ctx.drawImage(trophyImage, x, y, 50, 80);
+        }
+
+        ctx.fillStyle = 'black';
+        ctx.textAlign = 'center';
+        ctx.font = currentWordFont;
+
+        var x = canvas.width / 2;
+        var y = canvas.height / 3;
+        ctx.fillText(currentWord, x, y);
+
+        ctx.font = "serif";
+        var y = 2 * canvas.height / 3;
+        ctx.fillStyle = "red";
+        ctx.fillText(typedWord, x, y);
+
+        drawBoundary(ctx);
+    }
 
     ctx.restore();
-    console.log("draw()");
+}
+
+function drawBackground(ctx)
+{
+    ctx.fillStyle = "white";
+    ctx.fillRect(0,0,canvas.width, canvas.height);
 }
 
 function drawBoundary(ctx)
@@ -156,7 +276,7 @@ self.init = function init(canvasId)
 {
     canvas = document.getElementById(canvasId);
     
-    window.addEventListener('keydown', keypress, false);
+    window.addEventListener('keydown', keyPress, false);
 
     canvasSizeChanged();
     window.onresize = windowResize;
@@ -168,6 +288,10 @@ self.init = function init(canvasId)
     document.addEventListener("msfullscreenchange", fullScreenChange, false);
 
     nextWord();
+
+    trophyImage.src = TROPHY_PATH; // in theory we should wait until it loads before drawing
+
+    lastTypeMs = ms();
 
     //requestFullScreen(document.documentElement);
     repaint();
