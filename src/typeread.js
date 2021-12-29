@@ -40,11 +40,11 @@ var REMOVE_TROPHY_MS = 2000;
 var MOVE_TROPHY_MS = 1000;
 var SELECT_VIDEO_BORDER = 4;
 var VIDEO_PLAY_SECS = 45;
-var WIN_TROPHY_COUNT = 10;
+var WIN_TROPHY_COUNT = 9;
 
 // variables
 var repaintRequested = false;
-var trophyImages = [new Image(), new Image(), new Image()];
+var trophyImages = [new Image(), new Image(), new Image(), new Image(), new Image()];
 var trophies = []; // list of dicts with x, y coords and other info
 var videos = [];
 var video = 0; // selected video
@@ -155,12 +155,27 @@ function checkAnswer()
         var type = -1; // trophy type
         
         if (mathAnswer == -1)
-            type = 0;
+        {
+            // word
+            
+            if (currentWord.length < 5)
+                type = 0;
+            else if (currentWord.length < 7)
+                type = 3;
+            else
+                type = 4;
+        }
         else if (currentWord.includes("-"))
+        {
+            // minus
             type = 2;
+        }
         else
+        {
+            // plus
             type = 1;
-
+        }
+        
         var loc = randomTrophyLocation();
 
         var x = loc[0];
@@ -350,13 +365,17 @@ function drawGame(ctx)
             // erase trophy slowly
             var deathTime = t.deathTime;                
 
-            var scale = 0;
+            var t = 0; // goes from 1 down to 0
 
             if (now >= deathTime)
                 eraseTrophyIndex = i;
             else
-                scale = (deathTime - now) / REMOVE_TROPHY_MS;
+                t = (deathTime - now) / REMOVE_TROPHY_MS;
 
+            // scale goes from (1, 1), (0.5, 2), (0, 0)
+            // use a parabola
+            var scale = 7*t - 6*t*t
+            
             var oldW = w;
             var oldH = h;
             w *= scale;
@@ -585,7 +604,7 @@ self.init = function init(canvasId)
 
     nextWord();
 
-    for (var i = 0; i < 3; ++i)
+    for (var i = 0; i < 5; ++i)
         trophyImages[i].src = 'trophy' + i + '.png'; // in theory we should wait until it loads before drawing
 
     for (var i = 0; i < 4; ++i)
