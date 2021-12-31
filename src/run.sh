@@ -1,3 +1,3 @@
 #!/bin/bash
  
-firefox -kiosk index.html &
+firefox --kiosk index.html &

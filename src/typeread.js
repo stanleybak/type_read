@@ -39,8 +39,10 @@ var NUM_PRAISES = 9;
 var REMOVE_TROPHY_MS = 2000;
 var MOVE_TROPHY_MS = 1000;
 var SELECT_VIDEO_BORDER = 4;
-var VIDEO_PLAY_SECS = 45;
-var WIN_TROPHY_COUNT = 9;
+var VIDEO_PLAY_SECS = 60;
+var WIN_TROPHY_COUNT = 6; console.log("TODO: set to 9");
+var WIN_SHUFFLE_COUNT = 5;
+var WIN_REDIRECT_URL = "file:///home/stan/Desktop/repositories/type_read";
 
 // variables
 var repaintRequested = false;
@@ -54,6 +56,11 @@ var mathAnswer = -1;
 var video_counter = 5;
 var trophyOffset = 0;
 var gameEnded = false;
+var winShuffles = 0;
+
+var mouseClickedTrophyIndex = -1;
+var mouseLastX = 0;
+var mouseLastY = 0;
 
 // assigned on init
 var canvas;
@@ -63,7 +70,7 @@ var typedWord;
 var incorrectCount;
     
 function keyPress(e)
-{
+{  
     var keynum = -1;
     
     if (window.event) // IE
@@ -117,7 +124,7 @@ function playVideo()
     window.setTimeout(function (){video.pause();}, VIDEO_PLAY_SECS * 1000);
 }
 
-function moveTrophies(moveMs)
+function moveTrophies(moveMs, moveAll)
 {
     var now = mills();
     
@@ -127,10 +134,13 @@ function moveTrophies(moveMs)
 
         var loc = randomTrophyLocation();
 
-        t.moveX = loc[0];
-        t.moveY = loc[1];
-        t.stillMoving = true;
-        t.moveTime = now + moveMs;
+        if (moveAll || !('manuallyMoved' in t))
+        {
+            t.moveX = loc[0];
+            t.moveY = loc[1];
+            t.stillMoving = true;
+            t.moveTime = now + moveMs;
+        }
     }
 
     repaint();
@@ -201,7 +211,7 @@ function checkAnswer()
             }
             else
             {
-                window.setTimeout(function (){moveTrophies(MOVE_TROPHY_MS);}, 500);
+                window.setTimeout(function (){moveTrophies(MOVE_TROPHY_MS, false);}, 500);
                 window.setTimeout(function (){playVideo(); nextWord();}, MOVE_TROPHY_MS + 1500);
             }
         }
@@ -418,12 +428,23 @@ function drawGame(ctx)
     }
 
     if (eraseTrophyIndex != -1)
+    {
+        mouseClickedTrophyIndex = -1; // in case there's a current dragging selection
         trophies.splice(eraseTrophyIndex, 1);
+    }
 
     if (gameEnded)
     {
         if (!anyTrophiesMoving)
-            moveTrophies(MOVE_TROPHY_MS);
+        {
+            moveTrophies(MOVE_TROPHY_MS, true);
+            winShuffles += 1;
+
+            if (winShuffles > WIN_SHUFFLE_COUNT && WIN_REDIRECT_URL !== undefined)
+            {
+                window.location.replace(WIN_REDIRECT_URL);
+            }
+        }
 
         ctx.fillStyle = 'red';
         ctx.textAlign = 'center';
@@ -506,11 +527,11 @@ function getOverVideoIndex(x, y)
 
 function mouseMove(e)
 {
+    var mx = e.offsetX;
+    var my = e.offsetY;
+    
     if (video == 0)
     {
-        var mx = e.offsetX;
-        var my = e.offsetY;
-
         var over = getOverVideoIndex(mx, my);
 
         if (over != mouseOverVideoIndex)
@@ -519,15 +540,63 @@ function mouseMove(e)
             repaint();
         }
     }
+    else
+    {
+        var pressed = e.buttons === undefined ? e.which & 1 == 1 : e.buttons & 1 == 1;
+
+        if (pressed && mouseClickedTrophyIndex != -1)
+        {
+            var dx = mx - mouseLastX;
+            var dy = my - mouseLastY;
+
+            var t = trophies[mouseClickedTrophyIndex];
+            t.x += dx;
+            t.y += dy;
+            t['manuallyMoved'] = true;
+            repaint();
+        }
+        else
+        {
+            mouseClickedTrophyIndex = -1;
+        }
+    }
+
+    mouseLastX = mx;
+    mouseLastY = my;
 }
 
+function checkTrophyClicked(mx, my)
+{
+    mouseClickedTrophyIndex = -1;
+    
+    for (var i = trophies.length - 1; i >= 0; --i)
+    {
+        var t = trophies[i];
+
+        if ('moveTime' in t)
+            continue;
+
+        if (mx >= t.x && mx <= t.x + t.w && my >= t.y && my <= t.y + t.h)
+        {
+            // draw it last (move to top)
+            for (var j = i; j < trophies.length - 1; ++j)
+                trophies[j] = trophies[j + 1];
+            
+            trophies[trophies.length - 1] = t;
+            
+            mouseClickedTrophyIndex = trophies.length - 1;
+            break;
+        }
+    }
+}
+    
 function mouseDown(e)
 {
+    var mx = e.offsetX;
+    var my = e.offsetY;
+    
     if (video == 0)
     {
-        var mx = e.offsetX;
-        var my = e.offsetY;
-
         var over = getOverVideoIndex(mx, my);
 
         if (over != -1)
@@ -538,6 +607,8 @@ function mouseDown(e)
             repaint();
         }
     }
+    else if (!gameEnded)
+        checkTrophyClicked(mx, my);
 }
 
 function draw()
