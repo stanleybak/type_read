@@ -40,9 +40,9 @@ var REMOVE_TROPHY_MS = 2000;
 var MOVE_TROPHY_MS = 1000;
 var SELECT_VIDEO_BORDER = 4;
 var VIDEO_PLAY_SECS = 60;
-var WIN_TROPHY_COUNT = 6; console.log("TODO: set to 9");
-var WIN_SHUFFLE_COUNT = 5;
-var WIN_REDIRECT_URL = "file:///home/stan/Desktop/repositories/type_read";
+var WIN_TROPHY_COUNT = 9;
+var WIN_SHUFFLE_COUNT = 10;
+var WIN_REDIRECT_URL = undefined;
 
 // variables
 var repaintRequested = false;
@@ -441,9 +441,7 @@ function drawGame(ctx)
             winShuffles += 1;
 
             if (winShuffles > WIN_SHUFFLE_COUNT && WIN_REDIRECT_URL !== undefined)
-            {
                 window.location.replace(WIN_REDIRECT_URL);
-            }
         }
 
         ctx.fillStyle = 'red';
@@ -573,7 +571,8 @@ function checkTrophyClicked(mx, my)
     {
         var t = trophies[i];
 
-        if ('moveTime' in t)
+        // cannot select moving trophies
+        if ('moveTime' in t && t.stillMoving)
             continue;
 
         if (mx >= t.x && mx <= t.x + t.w && my >= t.y && my <= t.y + t.h)
