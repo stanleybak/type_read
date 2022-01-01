@@ -35,7 +35,17 @@ for i, word in enumerate(words):
     speech = Speech(word, "en")
     filename = f"{word}.mp3"
 
-    print(f"{i+1}/{len(words)}: {filename}")
+    print(f"word {i+1}/{len(words)}: {filename}")
+    speech.save(filename)
+
+praises = ["good job", "nice work", "success", "great work", "keep going", "you're doing great",
+           "correct", "that's right", "you're right"]
+
+for i, praise in enumerate(praises):
+    speech = Speech(praise, "en")
+    filename = f"praise{i}.mp3"
+
+    print(f"praise {i+1}/{len(praises)}: {filename}")
     speech.save(filename)
 
 print("Done!")
