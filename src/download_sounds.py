@@ -48,4 +48,11 @@ for i, praise in enumerate(praises):
     print(f"praise {i+1}/{len(praises)}: {filename}")
     speech.save(filename)
 
+####################
+speech = Speech("try again", "en")
+filename = "wrong.mp3"
+
+print(f"{filename}")
+speech.save(filename)
+
 print("Done!")
