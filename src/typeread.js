@@ -39,21 +39,21 @@ var NUM_PRAISES = 9;
 var REMOVE_TROPHY_MS = 2000;
 var MOVE_TROPHY_MS = 1000;
 var SELECT_VIDEO_BORDER = 4;
-var VIDEO_PLAY_SECS = 60;
-var WIN_TROPHY_COUNT = 9;
+var VIDEO_PLAY_SECS = 50;
+var WIN_TROPHY_COUNT = 10;
 var WIN_SHUFFLE_COUNT = 10;
 var WIN_REDIRECT_URL = undefined;
 
 // variables
 var repaintRequested = false;
-var trophyImages = [new Image(), new Image(), new Image(), new Image(), new Image()];
+var trophyImages = [new Image(), new Image(), new Image(), new Image(), new Image(), new Image()];
 var trophies = []; // list of dicts with x, y coords and other info
 var videos = [];
 var video = 0; // selected video
 
 var mouseOverVideoIndex = -1;
 var mathAnswer = -1;
-var video_counter = 5;
+var video_counter = 6;
 var trophyOffset = 0;
 var gameEnded = false;
 var winShuffles = 0;
@@ -163,8 +163,12 @@ function checkAnswer()
         new Audio(filename).play();
         
         var type = -1; // trophy type
-        
-        if (mathAnswer == -1)
+
+        if (rand() % 100 == 0)
+        {
+            type = 5; // random red trophy
+        }
+        else if (mathAnswer == -1)
         {
             // word
             
@@ -192,6 +196,13 @@ function checkAnswer()
         var y = loc[1];
         var w = 30 + rand() % 40;
         var h = 3 * w / 2;
+
+        if (rand() % 50 == 0)
+        {
+            // really big (maybe)
+            w += 50;
+            h = 3 * w / 2;
+        }
 
         var t = {'x': x, 'y': y, 'w': w, 'h': h, 'type': type};
         trophies.push(t);
@@ -674,7 +685,7 @@ self.init = function init(canvasId)
 
     nextWord();
 
-    for (var i = 0; i < 5; ++i)
+    for (var i = 0; i < trophyImages.length; ++i)
         trophyImages[i].src = 'trophy' + i + '.png'; // in theory we should wait until it loads before drawing
 
     for (var i = 0; i < 4; ++i)
