@@ -42,11 +42,14 @@ var SELECT_VIDEO_BORDER = 4;
 var VIDEO_PLAY_SECS = 50;
 var WIN_TROPHY_COUNT = 10;
 var WIN_SHUFFLE_COUNT = 10;
-var WIN_REDIRECT_URL = undefined;
+var NUM_TROPHIES_REMOVE_WRONG = 3;
+var NUM_TROPHIES = 6;
+var WIN_REDIRECT_URL = '/typer/games/index.html'; //undefined;
 
 // variables
 var repaintRequested = false;
-var trophyImages = [new Image(), new Image(), new Image(), new Image(), new Image(), new Image()];
+//var trophyImages = [new Image(), new Image(), new Image(), new Image(), new Image(), new Image()];
+var trophyImages = [];
 var trophies = []; // list of dicts with x, y coords and other info
 var videos = [];
 var video = 0; // selected video
@@ -108,6 +111,51 @@ function keyPress(e)
             checkAnswer();
 
         repaint();
+    }
+}
+
+function getDateString()
+{
+    const options = { 
+      month: '2-digit', 
+      day: '2-digit',
+      year: 'numeric', 
+    };
+
+    return new Date().toLocaleDateString('en-US', options); // mm/dd/yyyy
+}
+
+function saveState()
+{
+    // save state to local storage
+    var today = getDateString();
+    var ls = window.localStorage;
+
+    ls.setItem('today', today);
+    ls.setItem('trophies', JSON.stringify(trophies));
+    ls.setItem('video_counter', JSON.stringify(video_counter));
+    ls.setItem('trophyOffset', JSON.stringify(trophyOffset));
+    ls.setItem('gameEnded', JSON.stringify(gameEnded));
+}
+
+function loadState()
+{
+    var ls = window.localStorage;
+    var today = ls.getItem('today');
+
+    if (today != null && today == getDateString())
+    {
+        var ended = JSON.parse(ls.getItem('gameEnded'));
+        // if gameEnded, do not load
+
+        if (!ended)
+        {
+            trophies = JSON.parse(ls.getItem('trophies'));
+            video_counter = JSON.parse(ls.getItem('video_counter'));
+            trophyOffset = JSON.parse(ls.getItem('trophyOffset'));
+
+            repaint();
+        }
     }
 }
 
@@ -200,7 +248,7 @@ function checkAnswer()
         if (rand() % 50 == 0)
         {
             // really big (maybe)
-            w += 50;
+            w += 100;
             h = 3 * w / 2;
         }
 
@@ -240,8 +288,11 @@ function checkAnswer()
 
             if (trophies.length > 0)
             {
-                var i = rand() % trophies.length;
-                trophies[i]['deathTime'] = REMOVE_TROPHY_MS + mills(); // set death time
+                for (var k = 0; k < NUM_TROPHIES_REMOVE_WRONG; ++k)
+                {
+                    var i = rand() % trophies.length;
+                    trophies[i]['deathTime'] = REMOVE_TROPHY_MS + mills(); // set death time
+                }
             }
             
             repaint();
@@ -251,6 +302,8 @@ function checkAnswer()
         else
             incorrectCount += 1;
     }
+
+    saveState();
 }
 
 function mills()
@@ -267,15 +320,15 @@ function nextWord()
         if (rand() % 3 > 0)
         {
             // add
-            var a = rand() % 8;
-            var b = rand() % 8;
+            var a = rand() % 11;
+            var b = rand() % 11;
             currentWord = a + " + " + b;
             mathAnswer = a + b;
         }
         else
         { // subtract
-            var b = 1 + rand() % 2;
-            var a = b + rand() % 10;
+            var b = rand() % 5;
+            var a = b + rand() % 13;
             currentWord = a + " - " + b;
             mathAnswer = a - b;
         }
@@ -614,6 +667,8 @@ function mouseDown(e)
             requestFullScreen(document.documentElement);
             
             video = videos[over];
+
+            loadState();
             repaint();
         }
     }
@@ -685,8 +740,13 @@ self.init = function init(canvasId)
 
     nextWord();
 
-    for (var i = 0; i < trophyImages.length; ++i)
-        trophyImages[i].src = 'trophy' + i + '.png'; // in theory we should wait until it loads before drawing
+    //for (var i = 0; i < trophyImages.length; ++i)
+    //    trophyImages[i].src = 'trophy' + i + '.png'; // in theory we should wait until it loads before drawing
+
+    for (var i = 0; i < NUM_TROPHIES; ++i)
+    {
+        trophyImages.push(document.getElementById('trophy' + i));
+    }
 
     for (var i = 0; i < 4; ++i)
     {
