@@ -44,7 +44,7 @@ var WIN_TROPHY_COUNT = 10;
 var WIN_SHUFFLE_COUNT = 10;
 var NUM_TROPHIES_REMOVE_WRONG = 3;
 var NUM_TROPHIES = 6;
-var WIN_REDIRECT_URL = '/typer/games/index.html'; //undefined;
+var WIN_REDIRECT_URL = '/typer/games'; //undefined;
 
 // variables
 var repaintRequested = false;
