@@ -337,6 +337,9 @@ function nextWord()
     {
         var index = rand() % words.length; // time returned is milliseconds 
         currentWord = words[index];
+
+        // play sound
+        new Audio(currentWord + '.mp3').play();
     }
     
     var size = 35 + rand() % 30;
@@ -529,7 +532,11 @@ function drawGame(ctx)
         var x = canvas.width / 2;
         var y = canvas.height / 3;
         //ctx.fillText(currentWord, x, y);
-        boxText(ctx, currentWord, "black", x, y);
+
+        if (mathAnswer != -1)
+            boxText(ctx, currentWord, "black", x, y);
+        else if (currentWord.length > 0)
+            boxText(ctx, "*" + currentWord.substring(1), "black", x, y);
 
         ctx.font = "40px serif";
         var y = 2 * canvas.height / 3;
