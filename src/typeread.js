@@ -536,8 +536,13 @@ function drawGame(ctx)
         if (mathAnswer != -1)
             boxText(ctx, currentWord, "black", x, y);
         else if (currentWord.length > 0)
-            boxText(ctx, "*" + currentWord.substring(1), "black", x, y);
-
+        {
+            if (incorrectCount > 0 && currentWord.substring(1) == typedWord.substring(1))
+                boxText(ctx, currentWord, "black", x, y);
+            else
+                boxText(ctx, "*" + currentWord.substring(1), "black", x, y);
+        }
+        
         ctx.font = "40px serif";
         var y = 2 * canvas.height / 3;
         //ctx.fillStyle = "red";
