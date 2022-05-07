@@ -89,6 +89,23 @@ function keyPress(e)
         // pause video
         if (charStr == " ")
             video.pause();
+        else
+        {
+            var w = window.innerWidth - 20;
+            var h = window.innerHeight - 20;
+
+            if (w != canvas.width)
+            {
+                canvas.width = w;
+                canvas.height = h;
+            }
+            else
+            {
+                canvas.width = w - 1;
+                canvas.height = h - 1;
+                console.log("canvas.width = " + canvas.width);
+            }
+        }
     }
     else if (!e.repeat && !gameEnded)
     {
@@ -205,7 +222,16 @@ function randomTrophyLocation()
 
 function checkAnswer()
 {
-    if ((mathAnswer == -1 && typedWord == currentWord) || (mathAnswer != -1 && typedWord == "" + mathAnswer))
+    if (typedWord == "restart")
+    {
+        gameEnded = false;
+        trophies = [];
+        video_counter = 6;
+        trophyOffset = 0;
+        nextWord();
+        repaint();
+    }
+    else if ((mathAnswer == -1 && typedWord == currentWord) || (mathAnswer != -1 && typedWord == "" + mathAnswer))
     {
         // play "jia you!"
         var filename = "praise" + (rand() % NUM_PRAISES) + ".mp3";
@@ -341,8 +367,11 @@ function nextWord()
 
         showFirstLetter = rand() % 3;
 
-        // play sound
-        new Audio(currentWord + '.mp3').play();
+        if (!showFirstLetter)
+        {
+            // play sound
+            new Audio(currentWord + '.mp3').play();
+        }
     }
     
     var size = 35 + rand() % 30;
