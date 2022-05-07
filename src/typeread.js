@@ -35,11 +35,11 @@ var words = ["and", "away", "big", "blue", "can", "come", "down", "find", "for",
 var LIGHT_BLUE = 'rgb(0,153,255)';
 var TEXT_BACKGROUND = 'rgba(255,255,255,0.85)';
 var MAX_TYPED_LEN = 10;
-var NUM_PRAISES = 9;
+var NUM_PRAISES = 12;
 var REMOVE_TROPHY_MS = 2000;
 var MOVE_TROPHY_MS = 1000;
 var SELECT_VIDEO_BORDER = 4;
-var VIDEO_PLAY_SECS = 50;
+var VIDEO_PLAY_SECS = 75;
 var WIN_TROPHY_COUNT = 10;
 var WIN_SHUFFLE_COUNT = 10;
 var NUM_TROPHIES_REMOVE_WRONG = 3;
@@ -68,6 +68,7 @@ var mouseLastY = 0;
 // assigned on init
 var canvas;
 var currentWord;
+var showFirstLetter = 0;
 var currentWordFont;
 var typedWord;
 var incorrectCount;
@@ -338,6 +339,8 @@ function nextWord()
         var index = rand() % words.length; // time returned is milliseconds 
         currentWord = words[index];
 
+        showFirstLetter = rand() % 3;
+
         // play sound
         new Audio(currentWord + '.mp3').play();
     }
@@ -537,7 +540,9 @@ function drawGame(ctx)
             boxText(ctx, currentWord, "black", x, y);
         else if (currentWord.length > 0)
         {
-            if (incorrectCount > 0 && currentWord.substring(1) == typedWord.substring(1))
+            if (showFirstLetter != 0)
+                boxText(ctx, currentWord, "black", x, y);
+            else if (incorrectCount > 0 && currentWord.substring(1) == typedWord.substring(1))
                 boxText(ctx, currentWord, "black", x, y);
             else
                 boxText(ctx, "*" + currentWord.substring(1), "black", x, y);
