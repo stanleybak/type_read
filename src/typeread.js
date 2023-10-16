@@ -39,7 +39,10 @@ var NUM_PRAISES = 12;
 var REMOVE_TROPHY_MS = 2000;
 var MOVE_TROPHY_MS = 1000;
 var SELECT_VIDEO_BORDER = 4;
-var VIDEO_PLAY_SECS = 75;
+
+var CHILD = "ella";
+
+var VIDEO_PLAY_SECS = 60;
 var WIN_TROPHY_COUNT = 10;
 var WIN_SHUFFLE_COUNT = 10;
 var NUM_TROPHIES_REMOVE_WRONG = 3;
@@ -344,11 +347,21 @@ function nextWord()
     
     if (rand() % 3 == 0)
     { // math
-        if (rand() % 3 > 0)
+        if (rand() % 3 > 0 || CHILD == "ella")
         {
             // add
-            var a = rand() % 11;
-            var b = rand() % 11;
+            var a = 0;
+            var b = 0;
+            if (CHILD == "ella")
+            {
+                a = rand() % 6;
+                b = rand() % 6;
+            }
+            else
+            {
+                a = rand() % 11;
+                b = rand() % 11;
+            }
             currentWord = a + " + " + b;
             mathAnswer = a + b;
         }
@@ -365,7 +378,14 @@ function nextWord()
         var index = rand() % words.length; // time returned is milliseconds 
         currentWord = words[index];
 
-        showFirstLetter = rand() % 3;
+        if (CHILD == "ella")
+        {
+            showFirstLetter = 1;
+        }
+        else
+        {
+            showFirstLetter = rand() % 3;
+        }
 
         if (!showFirstLetter)
         {
